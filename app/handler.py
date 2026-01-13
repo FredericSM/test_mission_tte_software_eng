@@ -20,7 +20,7 @@ def handler(event, context):
 
     obj = s3.get_object(Bucket=bucket, Key=key)
     body = obj["Body"].read().decode("utf-8", errors="replace")
-    lines = [l for l in body.splitlines() if l.strip()]
+    lines = [line for line in body.splitlines() if line.strip()]
 
     summary = {
         "source_bucket": bucket,
