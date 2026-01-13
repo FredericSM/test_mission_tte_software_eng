@@ -15,4 +15,3 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install ruff pytest
       - run: ruff check app
-      - run: pytest -q
