@@ -1,4 +1,6 @@
-resource "random_id" "suffix" { byte_length = 4 }
+resource "random_id" "suffix" {
+  byte_length = 4
+}
 
 resource "aws_s3_bucket" "data" {
   bucket        = "${var.project_name}-${random_id.suffix.hex}"
@@ -18,18 +20,14 @@ resource "aws_cloudwatch_log_group" "lambda" {
   retention_in_days = 14
 }
 
+# ✅ TOP-LEVEL data block (not nested)
 data "aws_iam_policy_document" "assume_lambda" {
   statement {
     actions = ["sts:AssumeRole"]
-    data "aws_iam_policy_document" "assume_lambda" {
-      statement {
-        actions = ["sts:AssumeRole"]
 
-        principals {
-          type        = "Service"
-          identifiers = ["lambda.amazonaws.com"]
-        }
-      }
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
     }
   }
 }
@@ -49,20 +47,14 @@ resource "aws_iam_role_policy" "lambda_s3" {
   role = aws_iam_role.lambda_role.id
   policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"],
-        Resource = [
-          aws_s3_bucket.data.arn,
-          "${aws_s3_bucket.data.arn}/*"
-        ]
-      }
-    ]
+    Statement = [{
+      Effect = "Allow",
+      Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"],
+      Resource = [aws_s3_bucket.data.arn, "${aws_s3_bucket.data.arn}/*"]
+    }]
   })
 }
 
-# Lambda code zip will be placed at ../build/lambda.zip by the CI/CD
 resource "aws_lambda_function" "ingest" {
   function_name = "${var.project_name}-ingest-${random_id.suffix.hex}"
   role          = aws_iam_role.lambda_role.arn
@@ -73,9 +65,7 @@ resource "aws_lambda_function" "ingest" {
   memory_size   = 256
 
   environment {
-    variables = {
-      AGG_PREFIX = "agg/"
-    }
+    variables = { AGG_PREFIX = "agg/" }
   }
 
   depends_on = [aws_cloudwatch_log_group.lambda]
